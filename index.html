@@ -1,288 +1,265 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minhas Economias - Controle Financeiro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f0fdf4; color: #1f2937; }
-        .card { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 24px; margin-bottom: 20px; }
-        .btn-green { background-color: #16a34a; color: white; padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; }
-        .btn-green:hover { background-color: #15803d; }
-        .btn-add { background-color: #16a34a; color: white; padding: 10px 14px; border-radius: 50%; border: none; cursor: pointer; font-size: 18px; }
-        .btn-add:hover { background-color: #15803d; }
-        .progress-bar { background-color: #e5e7eb; border-radius: 4px; height: 8px; overflow: hidden; }
-        .progress-fill { background-color: #16a34a; height: 100%; transition: width 0.3s; }
-        .hidden { display: none; }
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-content { background: white; padding: 24px; border-radius: 12px; max-width: 500px; width: 90%; }
-        canvas { max-height: 300px; }
-    </style>
-</head>
-<body class="min-h-screen">
-    <header class="bg-green-600 text-white py-6 text-center">
-        <h1 class="text-3xl font-bold"><i class="fas fa-wallet"></i> Minhas Economias</h1>
-        <p class="mt-2">Controle suas finanças e alcance suas metas de economia</p>
-    </header>
-
-    <nav class="bg-white shadow-md py-4">
-        <div class="container mx-auto flex justify-center space-x-6">
-            <button id="btn-dashboard" class="px-4 py-2 text-green-600 font-semibold hover:bg-green-100 rounded">Dashboard</button>
-            <button id="btn-entradas" class="px-4 py-2 text-green-600 font-semibold hover:bg-green-100 rounded">Entradas</button>
-            <button id="btn-saidas" class="px-4 py-2 text-green-600 font-semibold hover:bg-green-100 rounded">Saídas</button>
-            <button id="btn-metas" class="px-4 py-2 text-green-600 font-semibold hover:bg-green-100 rounded">Metas</button>
-            <button id="btn-relatorios" class="px-4 py-2 text-green-600 font-semibold hover:bg-green-100 rounded">Relatórios</button>
-        </div>
-    </nav>
-
-    <main class="container mx-auto p-6 max-w-6xl">
-        <div id="dashboard" class="section">
-            <h2 class="text-2xl font-bold mb-6 text-center">Dashboard</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div class="card text-center">
-                    <h3 class="text-lg font-semibold text-green-600"><i class="fas fa-piggy-bank"></i> Economia Atual</h3>
-                    <p id="economia-atual" class="text-3xl font-bold text-green-600">R$ 0,00</p>
-                </div>
-                <div class="card text-center">
-                    <h3 class="text-lg font-semibold text-blue-600"><i class="fas fa-arrow-up"></i> Entradas (Mês)</h3>
-                    <p id="entradas-mes" class="text-3xl font-bold text-blue-600">R$ 0,00</p>
-                </div>
-                <div class="card text-center">
-                    <h3 class="text-lg font-semibold text-red-600"><i class="fas fa-arrow-down"></i> Saídas (Mês)</h3>
-                    <p id="saidas-mes" class="text-3xl font-bold text-red-600">R$ 0,00</p>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="card">
-                    <h3 class="text-lg font-semibold mb-4">Despesas por Categoria</h3>
-                    <canvas id="chart-categorias"></canvas>
-                </div>
-                <div class="card">
-                    <h3 class="text-lg font-semibold mb-4">Economia Mensal</h3>
-                    <canvas id="chart-economia"></canvas>
-                </div>
-            </div>
-            <div class="card">
-                <h3 class="text-lg font-semibold mb-4">Metas de Economia</h3>
-                <ul id="metas-lista"></ul>
-            </div>
-        </div>
-
-        <div id="entradas" class="section hidden">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">Entradas (Receitas)</h2>
-                <button id="btn-add-entrada" class="btn-add"><i class="fas fa-plus"></i></button>
-            </div>
-            <form id="form-entrada" class="card">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block font-semibold">Valor (R$)</label>
-                        <input type="number" id="valor-entrada" class="w-full p-3 border rounded" required>
-                    </div>
-                    <div>
-                        <label class="block font-semibold">Fonte</label>
-                        <select id="fonte-entrada" class="w-full p-3 border rounded" required>
-                            <option value="">Selecione</option>
-                            <option>Salário</option>
-                            <option>Freelance</option>
-                            <option>Investimentos</option>
-                            <option>Outros</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block font-semibold">Data</label>
-                        <input type="date" id="data-entrada" class="w-full p-3 border rounded" required>
-                    </div>
-                </div>
-                <button type="submit" class="btn-green mt-4">Salvar Entrada</button>
-            </form>
-            <div class="card">
-                <h3 class="text-lg font-semibold mb-4">Histórico de Entradas</h3>
-                <div class="mb-4">
-                    <label class="block font-semibold">Filtro por Mês/Ano:</label>
-                    <input type="month" id="filtro-entradas" class="p-3 border rounded">
-                    <button id="btn-filtrar-entradas" class="btn-green ml-2">Filtrar</button>
-                </div>
-                <ul id="historico-entradas" class="space-y-2"></ul>
-            </div>
-        </div>
-
-        <div id="saidas" class="section hidden">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">Saídas (Despesas)</h2>
-                <button id="btn-add-saida" class="btn-add"><i class="fas fa-plus"></i></button>
-            </div>
-            <form id="form-saida" class="card">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block font-semibold">Valor (R$)</label>
-                        <input type="number" id="valor-saida" class="w-full p-3 border rounded" required>
-                    </div>
-                    <div>
-                        <label class="block font-semibold">Categoria</label>
-                        <select id="categoria-saida" class="w-full p-3 border rounded" required>
-                            <option value="">Selecione</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block font-semibold">Nova Categoria (opcional)</label>
-                        <input type="text" id="nova-categoria-saida" class="w-full p-3 border rounded" placeholder="Adicione uma nova categoria">
-                    </div>
-                    <div>
-                        <label class="block font-semibold">Data</label>
-                        <input type="date" id="data-saida" class="w-full p-3 border rounded" required>
-                    </div>
-                </div>
-                <button type="submit" class="btn-green mt-4">Salvar Saída</button>
-            </form>
-            <div class="card">
-                <h3 class="text-lg font-semibold mb-4">Histórico de Saídas</h3>
-                <div class="mb-4">
-                    <label class="block font-semibold">Filtro por Mês/Ano:</label>
-                    <input type="month" id="filtro-saidas" class="p-3 border rounded">
-                    <button id="btn-filtrar-saidas" class="btn-green ml-2">Filtrar</button>
-                </div>
-                <ul id="historico-saidas" class="space-y-2"></ul>
-            </div>
-        </div>
-
-        <div id="metas" class="section hidden">
-            <h2 class="text-2xl font-bold mb-6 text-center">Metas de Economia</h2>
-            <form id="form-meta" class="card">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block font-semibold">Meta Mensal (R$)</label>
-                        <input type="number" id="meta-valor" class="w-full p-3 border rounded" required>
-                    </div>
-                    <div>
-                        <label class="block font-semibold">Descrição</label>
-                        <input type="text" id="meta-descricao" class="w-full p-3 border rounded" required>
-                    </div>
-                </div>
-                <button type="submit" class="btn-green mt-4">Salvar Meta</button>
-            </form>
-            <div class="card">
-                <h3 class="text-lg font-semibold mb-4">Metas Salvas</h3>
-                <ul id="metas-salvas" class="space-y-4"></ul>
-            </div>
-        </div>
-
-        <div id="relatorios" class="section hidden">
-            <h2 class="text-2xl font-bold mb-6 text-center">Relatórios</h2>
-            <div class="card">
-                <h3 class="text-lg font-semibold mb-4">Resumo por Período</h3>
-                <div class="mb-4">
-                    <label class="block font-semibold">Selecione Mês/Ano:</label>
-                    <input type="month" id="periodo-relatorio" class="p-3 border rounded">
-                    <button id="btn-gerar-relatorio" class="btn-green ml-2">Gerar Relatório</button>
-                </div>
-                <div id="relatorio-conteudo" class="mb-4"></div>
-                <button id="btn-baixar-relatorio" class="btn-green">Baixar Relatório (CSV)</button>
-            </div>
-        </div>
-    </main>
-
-    <!-- Modal para Adição Rápida -->
-    <div id="modal-entrada" class="modal hidden">
-        <div class="modal-content">
-            <h2 class="text-xl font-bold mb-4">Adicionar Entrada Rápida</h2>
-            <form id="form-entrada-modal">
-                <div class="grid grid-cols-1 gap-4">
-                    <div>
-                        <label class="block font-semibold">Valor (R$)</label>
-                        <input type="number" id="valor-entrada-modal" class="w-full p-3 border rounded" required>
-                    </div>
-                    <div>
-                        <label class="block font-semibold">Fonte</label>
-                        <select id="fonte-entrada-modal" class="w-full p-3 border rounded" required>
-                            <option value="">Selecione</option>
-                            <option>Salário</option>
-                            <option>Freelance</option>
-                            <option>Investimentos</option>
-                            <option>Outros</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block font-semibold">Data</label>
-                        <input type="date" id="data-entrada-modal" class="w-full p-3 border rounded" required>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <button type="submit" class="btn-green">Salvar</button>
-                    <button type="button" id="btn-close-modal-entrada" class="ml-2 px-4 py-2 bg-gray-500 text-white rounded">Cancelar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="modal-saida" class="modal hidden">
-        <div class="modal-content">
-            <h2 class="text-xl font-bold mb-4">Adicionar Saída Rápida</h2>
-            <form id="form-saida-modal">
-                <div class="grid grid-cols-1 gap-4">
-                    <div>
-                        <label class="block font-semibold">Valor (R$)</label>
-                        <input type="number" id="valor-saida-modal" class="w-full p-3 border rounded" required>
-                    </div>
-                    <div>
-                        <label class="block font-semibold">Categoria</label>
-                        <select id="categoria-saida-modal" class="w-full p-3 border rounded" required>
-                            <option value="">Selecione</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block font-semibold">Nova Categoria (opcional)</label>
-                        <input type="text" id="nova-categoria-saida-modal" class="w-full p-3 border rounded" placeholder="Adicione uma nova categoria">
-                    </div>
-                    <div>
-                        <label class="block font-semibold">Data</label>
-                        <input type="date" id="data-saida-modal" class="w-full p-3 border rounded" required>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <button type="submit" class="btn-green">Salvar</button>
-                    <button type="button" id="btn-close-modal-saida" class="ml-2 px-4 py-2 bg-gray-500 text-white rounded">Cancelar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        // Dados armazenados localmente
+<script>
+        // --- 1. ESTADO DA APLICAÇÃO ---
         let entradas = JSON.parse(localStorage.getItem('entradas')) || [];
         let saidas = JSON.parse(localStorage.getItem('saidas')) || [];
         let metas = JSON.parse(localStorage.getItem('metas')) || [];
         let categoriasSaidas = JSON.parse(localStorage.getItem('categoriasSaidas')) || ['Alimentação', 'Transporte', 'Lazer', 'Saúde', 'Educação', 'Casa', 'Tecnologia', 'Outros'];
 
-        function log(message) { console.log('[Minhas Economias]', message); }
+        let chartCategorias = null;
+        let chartEconomia = null;
 
-        function getElement(id) {
-            const el = document.getElementById(id);
-            if (!el) {
-                log(`Erro: Elemento ${id} não encontrado`);
-                return null;
-            }
-            return el;
+        // --- 2. INICIALIZAÇÃO ---
+        window.onload = () => {
+            updateCategoriasDropdown();
+            atualizarInterface();
+            setupEventListeners();
+            showSection('dashboard');
+        };
+
+        function setupEventListeners() {
+            // Navegação
+            const navMap = {
+                'btn-dashboard': 'dashboard',
+                'btn-entradas': 'entradas',
+                'btn-saidas': 'saidas',
+                'btn-metas': 'metas',
+                'btn-relatorios': 'relatorios'
+            };
+
+            Object.entries(navMap).forEach(([btnId, sectionId]) => {
+                document.getElementById(btnId).onclick = () => showSection(sectionId);
+            });
+
+            // Modais
+            document.getElementById('btn-add-entrada').onclick = () => toggleModal('modal-entrada', true);
+            document.getElementById('btn-close-modal-entrada').onclick = () => toggleModal('modal-entrada', false);
+            document.getElementById('btn-add-saida').onclick = () => toggleModal('modal-saida', true);
+            document.getElementById('btn-close-modal-saida').onclick = () => toggleModal('modal-saida', false);
+
+            // Formulários
+            setupForm('form-entrada', 'valor-entrada', 'fonte-entrada', 'data-entrada', 'entrada');
+            setupForm('form-entrada-modal', 'valor-entrada-modal', 'fonte-entrada-modal', 'data-entrada-modal', 'entrada', true);
+            
+            setupFormSaida('form-saida', 'valor-saida', 'categoria-saida', 'nova-categoria-saida', 'data-saida');
+            setupFormSaida('form-saida-modal', 'valor-saida-modal', 'categoria-saida-modal', 'nova-categoria-saida-modal', 'data-saida-modal', true);
+
+            document.getElementById('form-meta').onsubmit = salvarMeta;
+
+            // Filtros e Relatórios
+            document.getElementById('btn-filtrar-entradas').onclick = () => renderListaEntradas();
+            document.getElementById('btn-filtrar-saidas').onclick = () => renderListaSaidas();
+            document.getElementById('btn-gerar-relatorio').onclick = gerarRelatorio;
+            document.getElementById('btn-baixar-relatorio').onclick = baixarCSV;
         }
 
-        // Atualizar dropdown de categorias
+        // --- 3. LÓGICA DE INTERFACE ---
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            if(id === 'dashboard') renderCharts();
+        }
+
+        function toggleModal(id, show) {
+            document.getElementById(id).classList.toggle('hidden', !show);
+        }
+
         function updateCategoriasDropdown() {
-            const selects = ['categoria-saida', 'categoria-saida-modal'];
-            selects.forEach(id => {
-                const select = getElement(id);
-                if (select) {
-                    select.innerHTML = '<option value="">Selecione</option>' + categoriasSaidas.map(cat => `<option>${cat}</option>`).join('');
+            const options = '<option value="">Selecione</option>' + 
+                categoriasSaidas.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+            document.getElementById('categoria-saida').innerHTML = options;
+            document.getElementById('categoria-saida-modal').innerHTML = options;
+        }
+
+        // --- 4. LÓGICA DE DADOS (SALVAMENTO) ---
+        function setupForm(formId, valId, catId, dateId, type, isModal = false) {
+            document.getElementById(formId).onsubmit = (e) => {
+                e.preventDefault();
+                const item = {
+                    id: Date.now(),
+                    valor: parseFloat(document.getElementById(valId).value),
+                    categoria: document.getElementById(catId).value,
+                    data: document.getElementById(dateId).value
+                };
+                entradas.push(item);
+                saveAndRefresh();
+                e.target.reset();
+                if(isModal) toggleModal('modal-entrada', false);
+            };
+        }
+
+        function setupFormSaida(formId, valId, catId, newCatId, dateId, isModal = false) {
+            document.getElementById(formId).onsubmit = (e) => {
+                e.preventDefault();
+                let categoria = document.getElementById(catId).value;
+                const nova = document.getElementById(newCatId).value;
+
+                if (nova) {
+                    categoria = nova;
+                    if (!categoriasSaidas.includes(nova)) {
+                        categoriasSaidas.push(nova);
+                        updateCategoriasDropdown();
+                    }
+                }
+
+                saidas.push({
+                    id: Date.now(),
+                    valor: parseFloat(document.getElementById(valId).value),
+                    categoria: categoria,
+                    data: document.getElementById(dateId).value
+                });
+                saveAndRefresh();
+                e.target.reset();
+                if(isModal) toggleModal('modal-saida', false);
+            };
+        }
+
+        function salvarMeta(e) {
+            e.preventDefault();
+            metas.push({
+                id: Date.now(),
+                valor: parseFloat(document.getElementById('meta-valor').value),
+                descricao: document.getElementById('meta-descricao').value
+            });
+            saveAndRefresh();
+            e.target.reset();
+        }
+
+        function saveAndRefresh() {
+            localStorage.setItem('entradas', JSON.stringify(entradas));
+            localStorage.setItem('saidas', JSON.stringify(saidas));
+            localStorage.setItem('metas', JSON.stringify(metas));
+            localStorage.setItem('categoriasSaidas', JSON.stringify(categoriasSaidas));
+            atualizarInterface();
+        }
+
+        // --- 5. RENDERIZAÇÃO E CÁLCULOS ---
+        function atualizarInterface() {
+            const agora = new Date();
+            const mesAtual = agora.toISOString().substring(0, 7); // YYYY-MM
+
+            const totalEntradas = entradas.reduce((acc, v) => acc + v.valor, 0);
+            const totalSaidas = saidas.reduce((acc, v) => acc + v.valor, 0);
+            
+            const entMes = entradas.filter(e => e.data.startsWith(mesAtual)).reduce((acc, v) => acc + v.valor, 0);
+            const saiMes = saidas.filter(s => s.data.startsWith(mesAtual)).reduce((acc, v) => acc + v.valor, 0);
+
+            document.getElementById('economia-atual').innerText = `R$ ${(totalEntradas - totalSaidas).toLocaleString('pt-BR')}`;
+            document.getElementById('entradas-mes').innerText = `R$ ${entMes.toLocaleString('pt-BR')}`;
+            document.getElementById('saidas-mes').innerText = `R$ ${saiMes.toLocaleString('pt-BR')}`;
+
+            renderListaEntradas();
+            renderListaSaidas();
+            renderMetas();
+            if(!document.getElementById('dashboard').classList.contains('hidden')) renderCharts();
+        }
+
+        function renderListaEntradas() {
+            const filtro = document.getElementById('filtro-entradas').value;
+            const lista = document.getElementById('historico-entradas');
+            const dados = filtro ? entradas.filter(e => e.data.startsWith(filtro)) : entradas;
+            
+            lista.innerHTML = dados.map(e => `
+                <li class="flex justify-between border-b py-2">
+                    <span>${e.data.split('-').reverse().join('/')} - ${e.categoria}</span>
+                    <span class="text-blue-600 font-bold">+ R$ ${e.valor.toFixed(2)}</span>
+                </li>
+            `).join('') || '<p class="text-gray-400">Nenhum registro encontrado.</p>';
+        }
+
+        function renderListaSaidas() {
+            const filtro = document.getElementById('filtro-saidas').value;
+            const lista = document.getElementById('historico-saidas');
+            const dados = filtro ? saidas.filter(s => s.data.startsWith(filtro)) : saidas;
+
+            lista.innerHTML = dados.map(s => `
+                <li class="flex justify-between border-b py-2">
+                    <span>${s.data.split('-').reverse().join('/')} - ${s.categoria}</span>
+                    <span class="text-red-600 font-bold">- R$ ${s.valor.toFixed(2)}</span>
+                </li>
+            `).join('') || '<p class="text-gray-400">Nenhum registro encontrado.</p>';
+        }
+
+        function renderMetas() {
+            const totalEconomizado = entradas.reduce((acc, v) => acc + v.valor, 0) - saidas.reduce((acc, v) => acc + v.valor, 0);
+            const html = metas.map(m => {
+                const perc = Math.min((totalEconomizado / m.valor) * 100, 100).toFixed(0);
+                return `
+                    <div class="mb-4">
+                        <div class="flex justify-between mb-1">
+                            <span>${m.descricao} (Meta: R$ ${m.valor})</span>
+                            <span>${perc}%</span>
+                        </div>
+                        <div class="progress-bar"><div class="progress-fill" style="width: ${perc}%"></div></div>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('metas-lista').innerHTML = html;
+            document.getElementById('metas-salvas').innerHTML = html;
+        }
+
+        // --- 6. GRÁFICOS (CHART.JS) ---
+        function renderCharts() {
+            const ctxCat = document.getElementById('chart-categorias').getContext('2d');
+            const ctxEco = document.getElementById('chart-economia').getContext('2d');
+
+            if(chartCategorias) chartCategorias.destroy();
+            if(chartEconomia) chartEconomia.destroy();
+
+            // Dados Categoria
+            const gatosPorCat = {};
+            saidas.forEach(s => gatosPorCat[s.categoria] = (gatosPorCat[s.categoria] || 0) + s.valor);
+
+            chartCategorias = new Chart(ctxCat, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(gatosPorCat),
+                    datasets: [{ data: Object.values(gatosPorCat), backgroundColor: ['#16a34a', '#3b82f6', '#ef4444', '#f59e0b', '#8b5cf6', '#ec4899'] }]
+                }
+            });
+
+            // Dados Economia (Últimos 6 meses simplificado)
+            chartEconomia = new Chart(ctxEco, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+                    datasets: [{ label: 'Economia', data: [0, 0, 0, 0, 0, 0], borderColor: '#16a34a', fill: true }]
                 }
             });
         }
 
-        // Navegação
-        getElement('btn-dashboard')?.addEventListener('click', () => {
-            log('Botão Dashboard clicado');
-            showSection('dashboard');
-        });
-        getElement('btn-entradas')?.addEventListener('click', () => {
-            log('
+        // --- 7. RELATÓRIOS ---
+        function gerarRelatorio() {
+            const periodo = document.getElementById('periodo-relatorio').value;
+            if(!periodo) return alert("Selecione um mês!");
+            
+            const ePer = entradas.filter(e => e.data.startsWith(periodo)).reduce((acc, v) => acc + v.valor, 0);
+            const sPer = saidas.filter(s => s.data.startsWith(periodo)).reduce((acc, v) => acc + v.valor, 0);
+            
+            document.getElementById('relatorio-conteudo').innerHTML = `
+                <div class="p-4 bg-gray-50 rounded">
+                    <p>Total Recebido: <strong class="text-blue-600">R$ ${ePer.toFixed(2)}</strong></p>
+                    <p>Total Gasto: <strong class="text-red-600">R$ ${sPer.toFixed(2)}</strong></p>
+                    <hr class="my-2">
+                    <p>Saldo do Período: <strong>R$ ${(ePer - sPer).toFixed(2)}</strong></p>
+                </div>
+            `;
+        }
+
+        function baixarCSV() {
+            let csv = "Tipo;Data;Descricao;Valor\n";
+            entradas.forEach(e => csv += `Entrada;${e.data};${e.categoria};${e.valor}\n`);
+            saidas.forEach(s => csv += `Saida;${s.data};${s.categoria};${s.valor}\n`);
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', 'relatorio_financeiro.csv');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    </script>
+</body>
+</html>
