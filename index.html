@@ -1,265 +1,278 @@
-<script>
-        // --- 1. ESTADO DA APLICAÇÃO ---
-        let entradas = JSON.parse(localStorage.getItem('entradas')) || [];
-        let saidas = JSON.parse(localStorage.getItem('saidas')) || [];
-        let metas = JSON.parse(localStorage.getItem('metas')) || [];
-        let categoriasSaidas = JSON.parse(localStorage.getItem('categoriasSaidas')) || ['Alimentação', 'Transporte', 'Lazer', 'Saúde', 'Educação', 'Casa', 'Tecnologia', 'Outros'];
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minhas Economias - Controle Financeiro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0fdf4; color: #1f2937; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 24px; margin-bottom: 20px; }
+        .btn-green { background-color: #16a34a; color: white; padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; transition: 0.3s; }
+        .btn-green:hover { background-color: #15803d; }
+        .btn-add { background-color: #16a34a; color: white; padding: 10px 14px; border-radius: 50%; border: none; cursor: pointer; font-size: 18px; }
+        .progress-bar { background-color: #e5e7eb; border-radius: 4px; height: 8px; overflow: hidden; }
+        .progress-fill { background-color: #16a34a; height: 100%; transition: width 0.3s; }
+        .hidden { display: none; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: white; padding: 24px; border-radius: 12px; max-width: 500px; width: 90%; }
+    </style>
+</head>
+<body class="min-h-screen">
 
-        let chartCategorias = null;
-        let chartEconomia = null;
+    <header class="bg-green-600 text-white py-6 text-center">
+        <h1 class="text-3xl font-bold"><i class="fas fa-wallet"></i> Minhas Economias</h1>
+        <p class="mt-2">Controle suas finanças e alcance suas metas</p>
+    </header>
 
-        // --- 2. INICIALIZAÇÃO ---
-        window.onload = () => {
-            updateCategoriasDropdown();
-            atualizarInterface();
-            setupEventListeners();
-            showSection('dashboard');
+    <nav class="bg-white shadow-md py-4 sticky top-0 z-50">
+        <div class="container mx-auto flex justify-center space-x-2 md:space-x-6">
+            <button onclick="showSection('dashboard')" class="px-3 py-2 text-green-600 font-semibold hover:bg-green-100 rounded">Dashboard</button>
+            <button onclick="showSection('entradas')" class="px-3 py-2 text-green-600 font-semibold hover:bg-green-100 rounded">Entradas</button>
+            <button onclick="showSection('saidas')" class="px-3 py-2 text-green-600 font-semibold hover:bg-green-100 rounded">Saídas</button>
+            <button onclick="showSection('metas')" class="px-3 py-2 text-green-600 font-semibold hover:bg-green-100 rounded">Metas</button>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-6 max-w-6xl">
+        <div id="dashboard" class="section">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="card text-center">
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase">Saldo Atual</h3>
+                    <p id="saldo-geral" class="text-3xl font-bold text-green-600">R$ 0,00</p>
+                </div>
+                <div class="card text-center">
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase">Receitas</h3>
+                    <p id="total-entradas" class="text-3xl font-bold text-blue-600">R$ 0,00</p>
+                </div>
+                <div class="card text-center">
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase">Despesas</h3>
+                    <p id="total-saidas" class="text-3xl font-bold text-red-600">R$ 0,00</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="card">
+                    <h3 class="font-bold mb-4">Gastos por Categoria</h3>
+                    <canvas id="chartCategorias"></canvas>
+                </div>
+                <div class="card">
+                    <h3 class="font-bold mb-4">Progresso das Metas</h3>
+                    <div id="lista-metas-dash"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="entradas" class="section hidden">
+            <div class="card">
+                <h2 class="text-xl font-bold mb-4">Nova Receita</h2>
+                <form onsubmit="adicionarTransacao(event, 'entrada')">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <input type="number" step="0.01" id="val-entrada" placeholder="Valor R$" class="p-3 border rounded" required>
+                        <input type="text" id="desc-entrada" placeholder="Fonte (ex: Salário)" class="p-3 border rounded" required>
+                        <input type="date" id="data-entrada" class="p-3 border rounded" required>
+                    </div>
+                    <button type="submit" class="btn-green mt-4 w-full">Salvar Entrada</button>
+                </form>
+            </div>
+            <div class="card">
+                <h3 class="font-bold mb-4">Histórico de Receitas</h3>
+                <ul id="lista-entradas" class="divide-y"></ul>
+            </div>
+        </div>
+
+        <div id="saidas" class="section hidden">
+            <div class="card">
+                <h2 class="text-xl font-bold mb-4">Nova Despesa</h2>
+                <form onsubmit="adicionarTransacao(event, 'saida')">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="number" step="0.01" id="val-saida" placeholder="Valor R$" class="p-3 border rounded" required>
+                        <select id="cat-saida" class="p-3 border rounded"></select>
+                        <input type="text" id="nova-cat" placeholder="Ou digite nova categoria" class="p-3 border rounded">
+                        <input type="date" id="data-saida" class="p-3 border rounded" required>
+                    </div>
+                    <button type="submit" class="btn-green mt-4 w-full">Salvar Saída</button>
+                </form>
+            </div>
+            <div class="card">
+                <h3 class="font-bold mb-4">Histórico de Gastos</h3>
+                <ul id="lista-saidas" class="divide-y"></ul>
+            </div>
+        </div>
+
+        <div id="metas" class="section hidden">
+            <div class="card">
+                <h2 class="text-xl font-bold mb-4">Criar Meta de Economia</h2>
+                <form onsubmit="adicionarMeta(event)">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="text" id="meta-nome" placeholder="Nome da Meta (ex: Viagem)" class="p-3 border rounded" required>
+                        <input type="number" id="meta-valor" placeholder="Valor Objetivo R$" class="p-3 border rounded" required>
+                    </div>
+                    <button type="submit" class="btn-green mt-4 w-full">Criar Meta</button>
+                </form>
+            </div>
+            <div id="grid-metas" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </div>
+    </main>
+
+    <script>
+        // --- BANCO DE DADOS LOCAL ---
+        let dados = JSON.parse(localStorage.getItem('financas_db')) || {
+            transacoes: [],
+            metas: [],
+            categorias: ['Alimentação', 'Transporte', 'Lazer', 'Saúde', 'Casa']
         };
 
-        function setupEventListeners() {
-            // Navegação
-            const navMap = {
-                'btn-dashboard': 'dashboard',
-                'btn-entradas': 'entradas',
-                'btn-saidas': 'saidas',
-                'btn-metas': 'metas',
-                'btn-relatorios': 'relatorios'
-            };
+        let meuGrafico = null;
 
-            Object.entries(navMap).forEach(([btnId, sectionId]) => {
-                document.getElementById(btnId).onclick = () => showSection(sectionId);
-            });
-
-            // Modais
-            document.getElementById('btn-add-entrada').onclick = () => toggleModal('modal-entrada', true);
-            document.getElementById('btn-close-modal-entrada').onclick = () => toggleModal('modal-entrada', false);
-            document.getElementById('btn-add-saida').onclick = () => toggleModal('modal-saida', true);
-            document.getElementById('btn-close-modal-saida').onclick = () => toggleModal('modal-saida', false);
-
-            // Formulários
-            setupForm('form-entrada', 'valor-entrada', 'fonte-entrada', 'data-entrada', 'entrada');
-            setupForm('form-entrada-modal', 'valor-entrada-modal', 'fonte-entrada-modal', 'data-entrada-modal', 'entrada', true);
-            
-            setupFormSaida('form-saida', 'valor-saida', 'categoria-saida', 'nova-categoria-saida', 'data-saida');
-            setupFormSaida('form-saida-modal', 'valor-saida-modal', 'categoria-saida-modal', 'nova-categoria-saida-modal', 'data-saida-modal', true);
-
-            document.getElementById('form-meta').onsubmit = salvarMeta;
-
-            // Filtros e Relatórios
-            document.getElementById('btn-filtrar-entradas').onclick = () => renderListaEntradas();
-            document.getElementById('btn-filtrar-saidas').onclick = () => renderListaSaidas();
-            document.getElementById('btn-gerar-relatorio').onclick = gerarRelatorio;
-            document.getElementById('btn-baixar-relatorio').onclick = baixarCSV;
-        }
-
-        // --- 3. LÓGICA DE INTERFACE ---
+        // --- FUNÇÕES DE NAVEGAÇÃO ---
         function showSection(id) {
             document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
             document.getElementById(id).classList.remove('hidden');
-            if(id === 'dashboard') renderCharts();
+            if(id === 'dashboard') atualizarDashboard();
         }
 
-        function toggleModal(id, show) {
-            document.getElementById(id).classList.toggle('hidden', !show);
-        }
-
-        function updateCategoriasDropdown() {
-            const options = '<option value="">Selecione</option>' + 
-                categoriasSaidas.map(cat => `<option value="${cat}">${cat}</option>`).join('');
-            document.getElementById('categoria-saida').innerHTML = options;
-            document.getElementById('categoria-saida-modal').innerHTML = options;
-        }
-
-        // --- 4. LÓGICA DE DADOS (SALVAMENTO) ---
-        function setupForm(formId, valId, catId, dateId, type, isModal = false) {
-            document.getElementById(formId).onsubmit = (e) => {
-                e.preventDefault();
-                const item = {
-                    id: Date.now(),
-                    valor: parseFloat(document.getElementById(valId).value),
-                    categoria: document.getElementById(catId).value,
-                    data: document.getElementById(dateId).value
-                };
-                entradas.push(item);
-                saveAndRefresh();
-                e.target.reset();
-                if(isModal) toggleModal('modal-entrada', false);
-            };
-        }
-
-        function setupFormSaida(formId, valId, catId, newCatId, dateId, isModal = false) {
-            document.getElementById(formId).onsubmit = (e) => {
-                e.preventDefault();
-                let categoria = document.getElementById(catId).value;
-                const nova = document.getElementById(newCatId).value;
-
-                if (nova) {
-                    categoria = nova;
-                    if (!categoriasSaidas.includes(nova)) {
-                        categoriasSaidas.push(nova);
-                        updateCategoriasDropdown();
-                    }
-                }
-
-                saidas.push({
-                    id: Date.now(),
-                    valor: parseFloat(document.getElementById(valId).value),
-                    categoria: categoria,
-                    data: document.getElementById(dateId).value
-                });
-                saveAndRefresh();
-                e.target.reset();
-                if(isModal) toggleModal('modal-saida', false);
-            };
-        }
-
-        function salvarMeta(e) {
+        // --- LÓGICA DE TRANSAÇÕES ---
+        function adicionarTransacao(e, tipo) {
             e.preventDefault();
-            metas.push({
-                id: Date.now(),
-                valor: parseFloat(document.getElementById('meta-valor').value),
-                descricao: document.getElementById('meta-descricao').value
-            });
-            saveAndRefresh();
+            const valor = parseFloat(document.getElementById(`val-${tipo}`).value);
+            const data = document.getElementById(`data-${tipo}`).value;
+            let categoria = "";
+
+            if(tipo === 'entrada') {
+                categoria = document.getElementById('desc-entrada').value;
+            } else {
+                const sel = document.getElementById('cat-saida').value;
+                const nova = document.getElementById('nova-cat').value;
+                categoria = nova || sel;
+                if(nova && !dados.categorias.includes(nova)) dados.categorias.push(nova);
+            }
+
+            dados.transacoes.push({ id: Date.now(), tipo, valor, categoria, data });
+            salvar();
             e.target.reset();
+            alert("Registrado com sucesso!");
+            renderizarListas();
         }
 
-        function saveAndRefresh() {
-            localStorage.setItem('entradas', JSON.stringify(entradas));
-            localStorage.setItem('saidas', JSON.stringify(saidas));
-            localStorage.setItem('metas', JSON.stringify(metas));
-            localStorage.setItem('categoriasSaidas', JSON.stringify(categoriasSaidas));
-            atualizarInterface();
+        function adicionarMeta(e) {
+            e.preventDefault();
+            const nome = document.getElementById('meta-nome').value;
+            const objetivo = parseFloat(document.getElementById('meta-valor').value);
+            dados.metas.push({ id: Date.now(), nome, objetivo });
+            salvar();
+            e.target.reset();
+            renderizarMetas();
         }
 
-        // --- 5. RENDERIZAÇÃO E CÁLCULOS ---
-        function atualizarInterface() {
-            const agora = new Date();
-            const mesAtual = agora.toISOString().substring(0, 7); // YYYY-MM
+        function deletar(id) {
+            dados.transacoes = dados.transacoes.filter(t => t.id !== id);
+            salvar();
+            renderizarListas();
+            atualizarDashboard();
+        }
 
-            const totalEntradas = entradas.reduce((acc, v) => acc + v.valor, 0);
-            const totalSaidas = saidas.reduce((acc, v) => acc + v.valor, 0);
+        // --- CÁLCULOS E RENDERIZAÇÃO ---
+        function salvar() {
+            localStorage.setItem('financas_db', JSON.stringify(dados));
+            popularCategorias();
+        }
+
+        function popularCategorias() {
+            const select = document.getElementById('cat-saida');
+            select.innerHTML = dados.categorias.map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+
+        function renderizarListas() {
+            const listaE = document.getElementById('lista-entradas');
+            const listaS = document.getElementById('lista-saidas');
             
-            const entMes = entradas.filter(e => e.data.startsWith(mesAtual)).reduce((acc, v) => acc + v.valor, 0);
-            const saiMes = saidas.filter(s => s.data.startsWith(mesAtual)).reduce((acc, v) => acc + v.valor, 0);
-
-            document.getElementById('economia-atual').innerText = `R$ ${(totalEntradas - totalSaidas).toLocaleString('pt-BR')}`;
-            document.getElementById('entradas-mes').innerText = `R$ ${entMes.toLocaleString('pt-BR')}`;
-            document.getElementById('saidas-mes').innerText = `R$ ${saiMes.toLocaleString('pt-BR')}`;
-
-            renderListaEntradas();
-            renderListaSaidas();
-            renderMetas();
-            if(!document.getElementById('dashboard').classList.contains('hidden')) renderCharts();
-        }
-
-        function renderListaEntradas() {
-            const filtro = document.getElementById('filtro-entradas').value;
-            const lista = document.getElementById('historico-entradas');
-            const dados = filtro ? entradas.filter(e => e.data.startsWith(filtro)) : entradas;
-            
-            lista.innerHTML = dados.map(e => `
-                <li class="flex justify-between border-b py-2">
-                    <span>${e.data.split('-').reverse().join('/')} - ${e.categoria}</span>
-                    <span class="text-blue-600 font-bold">+ R$ ${e.valor.toFixed(2)}</span>
+            listaE.innerHTML = dados.transacoes.filter(t => t.tipo === 'entrada').map(t => `
+                <li class="py-3 flex justify-between items-center">
+                    <div><b>${t.categoria}</b><br><small>${t.data}</small></div>
+                    <div class="text-blue-600 font-bold">R$ ${t.valor.toFixed(2)} 
+                    <button onclick="deletar(${t.id})" class="ml-2 text-gray-400 hover:text-red-500"><i class="fas fa-trash"></i></button></div>
                 </li>
-            `).join('') || '<p class="text-gray-400">Nenhum registro encontrado.</p>';
-        }
+            `).join('');
 
-        function renderListaSaidas() {
-            const filtro = document.getElementById('filtro-saidas').value;
-            const lista = document.getElementById('historico-saidas');
-            const dados = filtro ? saidas.filter(s => s.data.startsWith(filtro)) : saidas;
-
-            lista.innerHTML = dados.map(s => `
-                <li class="flex justify-between border-b py-2">
-                    <span>${s.data.split('-').reverse().join('/')} - ${s.categoria}</span>
-                    <span class="text-red-600 font-bold">- R$ ${s.valor.toFixed(2)}</span>
+            listaS.innerHTML = dados.transacoes.filter(t => t.tipo === 'saida').map(t => `
+                <li class="py-3 flex justify-between items-center">
+                    <div><b>${t.categoria}</b><br><small>${t.data}</small></div>
+                    <div class="text-red-600 font-bold">- R$ ${t.valor.toFixed(2)}
+                    <button onclick="deletar(${t.id})" class="ml-2 text-gray-400 hover:text-red-500"><i class="fas fa-trash"></i></button></div>
                 </li>
-            `).join('') || '<p class="text-gray-400">Nenhum registro encontrado.</p>';
+            `).join('');
         }
 
-        function renderMetas() {
-            const totalEconomizado = entradas.reduce((acc, v) => acc + v.valor, 0) - saidas.reduce((acc, v) => acc + v.valor, 0);
-            const html = metas.map(m => {
-                const perc = Math.min((totalEconomizado / m.valor) * 100, 100).toFixed(0);
+        function renderizarMetas() {
+            const container = document.getElementById('grid-metas');
+            const dashContainer = document.getElementById('lista-metas-dash');
+            const saldoTotal = calcularSaldo();
+
+            const html = dados.metas.map(m => {
+                const progresso = Math.min((saldoTotal / m.objetivo) * 100, 100).toFixed(0);
                 return `
-                    <div class="mb-4">
-                        <div class="flex justify-between mb-1">
-                            <span>${m.descricao} (Meta: R$ ${m.valor})</span>
-                            <span>${perc}%</span>
+                    <div class="card">
+                        <div class="flex justify-between mb-2">
+                            <span class="font-bold">${m.nome}</span>
+                            <span>R$ ${saldoTotal.toFixed(2)} / ${m.objetivo}</span>
                         </div>
-                        <div class="progress-bar"><div class="progress-fill" style="width: ${perc}%"></div></div>
+                        <div class="progress-bar"><div class="progress-fill" style="width: ${progresso}%"></div></div>
+                        <p class="text-right text-xs mt-1">${progresso}% alcançado</p>
                     </div>
                 `;
             }).join('');
-            document.getElementById('metas-lista').innerHTML = html;
-            document.getElementById('metas-salvas').innerHTML = html;
+            
+            container.innerHTML = html;
+            dashContainer.innerHTML = html || '<p class="text-gray-400">Nenhuma meta cadastrada.</p>';
         }
 
-        // --- 6. GRÁFICOS (CHART.JS) ---
-        function renderCharts() {
-            const ctxCat = document.getElementById('chart-categorias').getContext('2d');
-            const ctxEco = document.getElementById('chart-economia').getContext('2d');
+        function calcularSaldo() {
+            const ent = dados.transacoes.filter(t => t.tipo === 'entrada').reduce((a, b) => a + b.valor, 0);
+            const sai = dados.transacoes.filter(t => t.tipo === 'saida').reduce((a, b) => a + b.valor, 0);
+            return ent - sai;
+        }
 
-            if(chartCategorias) chartCategorias.destroy();
-            if(chartEconomia) chartEconomia.destroy();
+        function atualizarDashboard() {
+            const receitas = dados.transacoes.filter(t => t.tipo === 'entrada').reduce((a, b) => a + b.valor, 0);
+            const despesas = dados.transacoes.filter(t => t.tipo === 'saida').reduce((a, b) => a + b.valor, 0);
+            
+            document.getElementById('saldo-geral').innerText = `R$ ${(receitas - despesas).toLocaleString('pt-BR')}`;
+            document.getElementById('total-entradas').innerText = `R$ ${receitas.toLocaleString('pt-BR')}`;
+            document.getElementById('total-saidas').innerText = `R$ ${despesas.toLocaleString('pt-BR')}`;
 
-            // Dados Categoria
-            const gatosPorCat = {};
-            saidas.forEach(s => gatosPorCat[s.categoria] = (gatosPorCat[s.categoria] || 0) + s.valor);
+            renderizarMetas();
+            renderizarGrafico();
+        }
 
-            chartCategorias = new Chart(ctxCat, {
+        function renderizarGrafico() {
+            const ctx = document.getElementById('chartCategorias').getContext('2d');
+            const gastos = {};
+            dados.transacoes.filter(t => t.tipo === 'saida').forEach(t => {
+                gastos[t.categoria] = (gastos[t.categoria] || 0) + t.valor;
+            });
+
+            if(meuGrafico) meuGrafico.destroy();
+            
+            meuGrafico = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: Object.keys(gatosPorCat),
-                    datasets: [{ data: Object.values(gatosPorCat), backgroundColor: ['#16a34a', '#3b82f6', '#ef4444', '#f59e0b', '#8b5cf6', '#ec4899'] }]
-                }
-            });
-
-            // Dados Economia (Últimos 6 meses simplificado)
-            chartEconomia = new Chart(ctxEco, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
-                    datasets: [{ label: 'Economia', data: [0, 0, 0, 0, 0, 0], borderColor: '#16a34a', fill: true }]
-                }
+                    labels: Object.keys(gastos),
+                    datasets: [{
+                        data: Object.values(gastos),
+                        backgroundColor: ['#16a34a', '#3b82f6', '#ef4444', '#f59e0b', '#8b5cf6']
+                    }]
+                },
+                options: { responsive: true }
             });
         }
 
-        // --- 7. RELATÓRIOS ---
-        function gerarRelatorio() {
-            const periodo = document.getElementById('periodo-relatorio').value;
-            if(!periodo) return alert("Selecione um mês!");
-            
-            const ePer = entradas.filter(e => e.data.startsWith(periodo)).reduce((acc, v) => acc + v.valor, 0);
-            const sPer = saidas.filter(s => s.data.startsWith(periodo)).reduce((acc, v) => acc + v.valor, 0);
-            
-            document.getElementById('relatorio-conteudo').innerHTML = `
-                <div class="p-4 bg-gray-50 rounded">
-                    <p>Total Recebido: <strong class="text-blue-600">R$ ${ePer.toFixed(2)}</strong></p>
-                    <p>Total Gasto: <strong class="text-red-600">R$ ${sPer.toFixed(2)}</strong></p>
-                    <hr class="my-2">
-                    <p>Saldo do Período: <strong>R$ ${(ePer - sPer).toFixed(2)}</strong></p>
-                </div>
-            `;
-        }
+        // Inicialização
+        popularCategorias();
+        renderizarListas();
+        atualizarDashboard();
 
-        function baixarCSV() {
-            let csv = "Tipo;Data;Descricao;Valor\n";
-            entradas.forEach(e => csv += `Entrada;${e.data};${e.categoria};${e.valor}\n`);
-            saidas.forEach(s => csv += `Saida;${s.data};${s.categoria};${s.valor}\n`);
-            
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.setAttribute('hidden', '');
-            a.setAttribute('href', url);
-            a.setAttribute('download', 'relatorio_financeiro.csv');
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
     </script>
 </body>
 </html>
