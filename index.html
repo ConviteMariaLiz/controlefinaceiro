@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle Financeiro Pessoal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto p-6 max-w-4xl">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-blue-600">Controle Financeiro Pessoal</h1>
+            <p class="text-gray-600 mt-2">Gerencie suas finanças de forma simples e visual.</p>
+        </header>
+
+        <nav class="flex justify-center space-x-4 mb-8">
+            <button id="btn-dashboard" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Dashboard</button>
+            <button id="btn-entradas" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Entradas</button>
+            <button id="btn-saidas" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Saídas</button>
+            <button id="btn-investimentos" class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600">Investimentos</button>
+        </nav>
+
+        <div id="dashboard" class="section">
+            <h2 class="text-2xl font-semibold mb-4">Dashboard</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-4 rounded shadow">
+                    <h3 class="text-lg font-medium">Resumo Mensal</h3>
+                    <p id="resumo">Carregando...</p>
+                </div>
+                <div class="bg-white p-4 rounded shadow">
+                    <h3 class="text-lg font-medium">Gráfico de Despesas por Categoria</h3>
+                    <canvas id="chart-despesas"></canvas>
+                </div>
+                <div class="bg-white p-4 rounded shadow">
+                    <h3 class="text-lg font-medium">Entradas vs. Saídas (Últimos 30 dias)</h3>
+                    <canvas id="chart-evolucao"></canvas>
+                </div>
+                <div class="bg-white p-4 rounded shadow">
+                    <h3 class="text-lg font-medium">Objetivos de Investimento</h3>
+                    <ul id="objetivos-lista"></ul>
+                </div>
+            </div>
+        </div>
+
+        <div id="entradas" class="section hidden">
+            <h2 class="text-2xl font-semibold mb-4">Registrar Entrada</h2>
+            <form id="form-entrada" class="bg-white p-6 rounded shadow">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium">Valor (R$)</label>
+                    <input type="number" id="valor-entrada" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium">Fonte (ex.: Salário, Freelance)</label>
+                    <input type="text" id="fonte-entrada" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium">Data</label>
+                    <input type="date" id="data-entrada" class="w-full p-2 border rounded" required>
+                </div>
+                <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Salvar</button>
+            </form>
+            <h3 class="text-lg font-medium mt-6">Histórico de Entradas</h3>
+            <ul id="historico-entradas" class="mt-4"></ul>
+        </div>
+
+        <div id="saidas" class="section hidden">
+            <h2 class="text-2xl font-semibold mb-4">Registrar Saída</h2>
+            <form id="form-saida" class="bg-white p-6 rounded shadow">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium">Valor (R$)</label>
+                    <input type="number" id="valor-saida" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium">Categoria (ex.: Alimentação, Transporte)</label>
+                    <input type="text" id="categoria-saida" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium">Data</label>
+                    <input type="date" id="data-saida" class="w-full p-2 border rounded" required>
+                </div>
+                <button type="submit" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Salvar</button>
+            </form>
+            <h3 class="text-lg font-medium mt-6">Histórico de Saídas</h3>
+            <ul id="historico-saidas" class="mt-4"></ul>
+        </div>
+
+        <div id="investimentos" class="section hidden">
+            <h2 class="text-2xl font-semibold mb-4">Objetivos de Investimento</h2>
+            <form id="form-investimento" class="bg-white p-6 rounded shadow">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium">Objetivo (ex.: Casa própria)</label>
+                    <input type="text" id="objetivo-investimento" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium">Valor Alvo (R$)</label>
+                    <input type="number" id="valor-alvo" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium">Valor Atual (R$)</label>
+                    <input type="number" id="valor-atual" class="w-full p-2 border rounded" required>
+                </div>
+                <button type="submit" class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600">Salvar</button>
+            </form>
+            <h3 class="text-lg font-medium mt-6">Objetivos Salvos</h3>
+            <ul id="objetivos-salvos" class="mt-4"></ul>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
