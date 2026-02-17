@@ -14,7 +14,11 @@
         .card { background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px; }
         .btn-primary { background-color: #1e40af; color: white; padding: 10px 20px; border-radius: 5px; border: none; cursor: pointer; }
         .btn-primary:hover { background-color: #1d4ed8; }
+        .btn-add { background-color: #10b981; color: white; padding: 8px 12px; border-radius: 50%; border: none; cursor: pointer; font-size: 18px; }
+        .btn-add:hover { background-color: #059669; }
         .hidden { display: none; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: white; padding: 20px; border-radius: 8px; max-width: 500px; width: 90%; }
         canvas { max-height: 300px; }
         @media (max-width: 768px) { .sidebar { width: 100%; position: relative; height: auto; } .main-content { margin-left: 0; } }
     </style>
@@ -67,7 +71,10 @@
         </div>
 
         <div id="entradas" class="section hidden">
-            <h1 class="text-3xl font-bold mb-6">Entradas (Receitas)</h1>
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold">Entradas (Receitas)</h1>
+                <button id="btn-add-entrada" class="btn-add"><i class="fas fa-plus"></i></button>
+            </div>
             <form id="form-entrada" class="card mb-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -103,7 +110,10 @@
         </div>
 
         <div id="saidas" class="section hidden">
-            <h1 class="text-3xl font-bold mb-6">Saídas (Despesas)</h1>
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold">Saídas (Despesas)</h1>
+                <button id="btn-add-saida" class="btn-add"><i class="fas fa-plus"></i></button>
+            </div>
             <form id="form-saida" class="card mb-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -118,8 +128,15 @@
                             <option>Transporte</option>
                             <option>Lazer</option>
                             <option>Saúde</option>
+                            <option>Educação</option>
+                            <option>Casa</option>
+                            <option>Tecnologia</option>
                             <option>Outros</option>
                         </select>
+                    </div>
+                    <div>
+                        <label>Nova Categoria (opcional)</label>
+                        <input type="text" id="nova-categoria-saida" class="w-full p-2 border rounded" placeholder="Adicione uma nova categoria">
                     </div>
                     <div>
                         <label>Data</label>
@@ -179,11 +196,85 @@
         </div>
     </div>
 
+    <!-- Modal para Adição Rápida -->
+    <div id="modal-entrada" class="modal hidden">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold mb-4">Adicionar Entrada Rápida</h2>
+            <form id="form-entrada-modal">
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label>Valor (R$)</label>
+                        <input type="number" id="valor-entrada-modal" class="w-full p-2 border rounded" required>
+                    </div>
+                    <div>
+                        <label>Fonte</label>
+                        <select id="fonte-entrada-modal" class="w-full p-2 border rounded" required>
+                            <option value="">Selecione</option>
+                            <option>Salário</option>
+                            <option>Freelance</option>
+                            <option>Investimentos</option>
+                            <option>Outros</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Data</label>
+                        <input type="date" id="data-entrada-modal" class="w-full p-2 border rounded" required>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <button type="submit" class="btn-primary">Salvar</button>
+                    <button type="button" id="btn-close-modal-entrada" class="ml-2 px-4 py-2 bg-gray-500 text-white rounded">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-saida" class="modal hidden">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold mb-4">Adicionar Saída Rápida</h2>
+            <form id="form-saida-modal">
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label>Valor (R$)</label>
+                        <input type="number" id="valor-saida-modal" class="w-full p-2 border rounded" required>
+                    </div>
+                    <div>
+                        <label>Categoria</label>
+                        <select id="categoria-saida-modal" class="w-full p-2 border rounded" required>
+                            <option value="">Selecione</option>
+                            <option>Alimentação</option>
+                            <option>Transporte</option>
+                            <option>Lazer</option>
+                            <option>Saúde</option>
+                            <option>Educação</option>
+                            <option>Casa</option>
+                            <option>Tecnologia</option>
+                            <option>Outros</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Nova Categoria (opcional)</label>
+                        <input type="text" id="nova-categoria-saida-modal" class="w-full p-2 border rounded" placeholder="Adicione uma nova categoria">
+                    </div>
+                    <div>
+                        <label>Data</label>
+                        <input type="date" id="data-saida-modal" class="w-full p-2 border rounded" required>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <button type="submit" class="btn-primary">Salvar</button>
+                    <button type="button" id="btn-close-modal-saida" class="ml-2 px-4 py-2 bg-gray-500 text-white rounded">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         // Dados armazenados localmente
         let entradas = JSON.parse(localStorage.getItem('entradas')) || [];
         let saidas = JSON.parse(localStorage.getItem('saidas')) || [];
         let investimentos = JSON.parse(localStorage.getItem('investimentos')) || [];
+        let categoriasSaidas = JSON.parse(localStorage.getItem('categoriasSaidas')) || ['Alimentação', 'Transporte', 'Lazer', 'Saúde', 'Educação', 'Casa', 'Tecnologia', 'Outros'];
 
         // Função de log para depuração
         function log(message) {
@@ -200,114 +291,17 @@
             return el;
         }
 
-        // Navegação
-        getElement('btn-dashboard')?.addEventListener('click', () => showSection('dashboard'));
-        getElement('btn-entradas')?.addEventListener('click', () => showSection('entradas'));
-        getElement('btn-saidas')?.addEventListener('click', () => showSection('saidas'));
-        getElement('btn-investimentos')?.addEventListener('click', () => showSection('investimentos'));
-        getElement('btn-relatorios')?.addEventListener('click', () => showSection('relatorios'));
-
-        function showSection(sectionId) {
-            log(`Mostrando seção: ${sectionId}`);
-            document.querySelectorAll('.section').forEach(sec => sec.classList.add('hidden'));
-            const section = getElement(sectionId);
-            if (section) section.classList.remove('hidden');
-            if (sectionId === 'dashboard') updateDashboard();
+        // Atualizar dropdown de categorias
+        function updateCategoriasDropdown() {
+            const selects = ['categoria-saida', 'categoria-saida-modal'];
+            selects.forEach(id => {
+                const select = getElement(id);
+                if (select) {
+                    select.innerHTML = '<option value="">Selecione</option>' + categoriasSaidas.map(cat => `<option>${cat}</option>`).join('');
+                }
+            });
         }
 
-        // Formulários
-        getElement('form-entrada')?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            log('Tentando salvar entrada');
-            try {
-                const valor = parseFloat(getElement('valor-entrada')?.value);
-                const fonte = getElement('fonte-entrada')?.value;
-                const data = getElement('data-entrada')?.value;
-                if (!valor || !fonte || !data) throw new Error('Preencha todos os campos obrigatórios');
-                const entrada = { valor, fonte, data };
-                entradas.push(entrada);
-                localStorage.setItem('entradas', JSON.stringify(entradas));
-                updateHistorico('historico-entradas', entradas);
-                e.target.reset();
-                alert('Entrada salva com sucesso!');
-                log('Entrada salva');
-            } catch (error) {
-                log(`Erro ao salvar entrada: ${error.message}`);
-                alert(`Erro: ${error.message}`);
-            }
-        });
-
-        getElement('form-saida')?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            log('Tentando salvar saída');
-            try {
-                const valor = parseFloat(getElement('valor-saida')?.value);
-                const categoria = getElement('categoria-saida')?.value;
-                const data = getElement('data-saida')?.value;
-                if (!valor || !categoria || !data) throw new Error('Preencha todos os campos obrigatórios');
-                const saida = { valor, categoria, data };
-                saidas.push(saida);
-                localStorage.setItem('saidas', JSON.stringify(saidas));
-                updateHistorico('historico-saidas', saidas);
-                e.target.reset();
-                alert('Saída salva com sucesso!');
-                log('Saída salva');
-            } catch (error) {
-                log(`Erro ao salvar saída: ${error.message}`);
-                alert(`Erro: ${error.message}`);
-            }
-        });
-
-        getElement('form-investimento')?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            log('Tentando salvar investimento');
-            try {
-                const objetivo = getElement('objetivo-investimento')?.value;
-                const alvo = parseFloat(getElement('valor-alvo')?.value);
-                const atual = parseFloat(getElement('valor-atual')?.value);
-                if (!objetivo || !alvo || isNaN(atual)) throw new Error('Preencha todos os campos obrigatórios');
-                const investimento = { objetivo, alvo, atual };
-                investimentos.push(investimento);
-                localStorage.setItem('investimentos', JSON.stringify(investimentos));
-                updateObjetivos();
-                e.target.reset();
-                alert('Objetivo salvo com sucesso!');
-                log('Investimento salvo');
-            } catch (error) {
-                log(`Erro ao salvar investimento: ${error.message}`);
-                alert(`Erro: ${error.message}`);
-            }
-        });
-
-        // Filtros
-        getElement('btn-filtrar-entradas')?.addEventListener('click', () => {
-            const filtro = getElement('filtro-entradas')?.value;
-            const filtradas = entradas.filter(e => e.data.startsWith(filtro));
-            updateHistorico('historico-entradas', filtradas);
-        });
-
-        getElement('btn-filtrar-saidas')?.addEventListener('click', () => {
-            const filtro = getElement('filtro-saidas')?.value;
-            const filtradas = saidas.filter(s => s.data.startsWith(filtro));
-            updateHistorico('historico-saidas', filtradas);
-        });
-
-        // Relatórios
-        getElement('btn-gerar-relatorio')?.addEventListener('click', () => {
-            const periodo = getElement('periodo-relatorio')?.value;
-            const entradasFiltradas = entradas.filter(e => e.data.startsWith(periodo));
-            const saidasFiltradas = saidas.filter(s => s.data.startsWith(periodo));
-            const totalEntradas = entradasFiltradas.reduce((sum, e) => sum + e.valor, 0);
-            const totalSaidas = saidasFiltradas.reduce((sum, s) => sum + s.valor, 0);
-            getElement('relatorio-conteudo').innerHTML = `
-                <p>Entradas: R$ ${totalEntradas.toFixed(2)}</p>
-                <p>Saídas: R$ ${totalSaidas.toFixed(2)}</p>
-                <p>Saldo: R$ ${(totalEntradas - totalSaidas).toFixed(2)}</p>
-            `;
-        });
-
-        getElement('btn-exportar')?.addEventListener('click', () => {
-            const csv = 'Data,Valor,Tipo,Categoria\n' +
-                entradas.map(e => `${e.data},${e.valor},Entrada,${e.fonte}`).join('\n') + '\n' +
-                saidas.map(s => `${s.data},${s.valor},Saída,${s.categoria}`).join('\n');
-            const blob = new Blob
+        // Navegação
+        getElement('btn-dashboard')?.addEventListener('click', () => showSection('dashboard'));
+        getElement('btn-entradas')?.addEventListener('click', () =>
