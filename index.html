@@ -185,67 +185,129 @@
         let saidas = JSON.parse(localStorage.getItem('saidas')) || [];
         let investimentos = JSON.parse(localStorage.getItem('investimentos')) || [];
 
-        function log(message) { console.log('[Controle Financeiro]', message); }
+        // Função de log para depuração
+        function log(message) {
+            console.log('[Controle Financeiro]', message);
+        }
+
+        // Verificar se elementos existem
+        function getElement(id) {
+            const el = document.getElementById(id);
+            if (!el) {
+                log(`Erro: Elemento ${id} não encontrado`);
+                return null;
+            }
+            return el;
+        }
 
         // Navegação
-        document.getElementById('btn-dashboard').addEventListener('click', () => showSection('dashboard'));
-        document.getElementById('btn-entradas').addEventListener('click', () => showSection('entradas'));
-        document.getElementById('btn-saidas').addEventListener('click', () => showSection('saidas'));
-        document.getElementById('btn-investimentos').addEventListener('click', () => showSection('investimentos'));
-        document.getElementById('btn-relatorios').addEventListener('click', () => showSection('relatorios'));
+        getElement('btn-dashboard')?.addEventListener('click', () => showSection('dashboard'));
+        getElement('btn-entradas')?.addEventListener('click', () => showSection('entradas'));
+        getElement('btn-saidas')?.addEventListener('click', () => showSection('saidas'));
+        getElement('btn-investimentos')?.addEventListener('click', () => showSection('investimentos'));
+        getElement('btn-relatorios')?.addEventListener('click', () => showSection('relatorios'));
 
         function showSection(sectionId) {
+            log(`Mostrando seção: ${sectionId}`);
             document.querySelectorAll('.section').forEach(sec => sec.classList.add('hidden'));
-            document.getElementById(sectionId).classList.remove('hidden');
+            const section = getElement(sectionId);
+            if (section) section.classList.remove('hidden');
             if (sectionId === 'dashboard') updateDashboard();
         }
 
         // Formulários
-        document.getElementById('form-entrada').addEventListener('submit', (e) => {
+        getElement('form-entrada')?.addEventListener('submit', (e) => {
             e.preventDefault();
-            const entrada = {
-                valor: parseFloat(document.getElementById('valor-entrada').value),
-                fonte: document.getElementById('fonte-entrada').value,
-                data: document.getElementById('data-entrada').value
-            };
-            entradas.push(entrada);
-            localStorage.setItem('entradas', JSON.stringify(entradas));
-            updateHistorico('historico-entradas', entradas);
-            e.target.reset();
-            alert('Entrada salva!');
+            log('Tentando salvar entrada');
+            try {
+                const valor = parseFloat(getElement('valor-entrada')?.value);
+                const fonte = getElement('fonte-entrada')?.value;
+                const data = getElement('data-entrada')?.value;
+                if (!valor || !fonte || !data) throw new Error('Preencha todos os campos obrigatórios');
+                const entrada = { valor, fonte, data };
+                entradas.push(entrada);
+                localStorage.setItem('entradas', JSON.stringify(entradas));
+                updateHistorico('historico-entradas', entradas);
+                e.target.reset();
+                alert('Entrada salva com sucesso!');
+                log('Entrada salva');
+            } catch (error) {
+                log(`Erro ao salvar entrada: ${error.message}`);
+                alert(`Erro: ${error.message}`);
+            }
         });
 
-        document.getElementById('form-saida').addEventListener('submit', (e) => {
+        getElement('form-saida')?.addEventListener('submit', (e) => {
             e.preventDefault();
-            const saida = {
-                valor: parseFloat(document.getElementById('valor-saida').value),
-                categoria: document.getElementById('categoria-saida').value,
-                data: document.getElementById('data-saida').value
-            };
-            saidas.push(saida);
-            localStorage.setItem('saidas', JSON.stringify(saidas));
-            updateHistorico('historico-saidas', saidas);
-            e.target.reset();
-            alert('Saída salva!');
+            log('Tentando salvar saída');
+            try {
+                const valor = parseFloat(getElement('valor-saida')?.value);
+                const categoria = getElement('categoria-saida')?.value;
+                const data = getElement('data-saida')?.value;
+                if (!valor || !categoria || !data) throw new Error('Preencha todos os campos obrigatórios');
+                const saida = { valor, categoria, data };
+                saidas.push(saida);
+                localStorage.setItem('saidas', JSON.stringify(saidas));
+                updateHistorico('historico-saidas', saidas);
+                e.target.reset();
+                alert('Saída salva com sucesso!');
+                log('Saída salva');
+            } catch (error) {
+                log(`Erro ao salvar saída: ${error.message}`);
+                alert(`Erro: ${error.message}`);
+            }
         });
 
-        document.getElementById('form-investimento').addEventListener('submit', (e) => {
+        getElement('form-investimento')?.addEventListener('submit', (e) => {
             e.preventDefault();
-            const investimento = {
-                objetivo: document.getElementById('objetivo-investimento').value,
-                alvo: parseFloat(document.getElementById('valor-alvo').value),
-                atual: parseFloat(document.getElementById('valor-atual').value)
-            };
-            investimentos.push(investimento);
-            localStorage.setItem('investimentos', JSON.stringify(investimentos));
-            updateObjetivos();
-            e.target.reset();
-            alert('Objetivo salvo!');
+            log('Tentando salvar investimento');
+            try {
+                const objetivo = getElement('objetivo-investimento')?.value;
+                const alvo = parseFloat(getElement('valor-alvo')?.value);
+                const atual = parseFloat(getElement('valor-atual')?.value);
+                if (!objetivo || !alvo || isNaN(atual)) throw new Error('Preencha todos os campos obrigatórios');
+                const investimento = { objetivo, alvo, atual };
+                investimentos.push(investimento);
+                localStorage.setItem('investimentos', JSON.stringify(investimentos));
+                updateObjetivos();
+                e.target.reset();
+                alert('Objetivo salvo com sucesso!');
+                log('Investimento salvo');
+            } catch (error) {
+                log(`Erro ao salvar investimento: ${error.message}`);
+                alert(`Erro: ${error.message}`);
+            }
         });
 
         // Filtros
-        document.getElementById('btn-filtrar-entradas').addEventListener('click', () => {
-            const filtro = document.getElementById('filtro-entradas').value;
+        getElement('btn-filtrar-entradas')?.addEventListener('click', () => {
+            const filtro = getElement('filtro-entradas')?.value;
             const filtradas = entradas.filter(e => e.data.startsWith(filtro));
             updateHistorico('historico-entradas', filtradas);
         });
+
+        getElement('btn-filtrar-saidas')?.addEventListener('click', () => {
+            const filtro = getElement('filtro-saidas')?.value;
+            const filtradas = saidas.filter(s => s.data.startsWith(filtro));
+            updateHistorico('historico-saidas', filtradas);
+        });
+
+        // Relatórios
+        getElement('btn-gerar-relatorio')?.addEventListener('click', () => {
+            const periodo = getElement('periodo-relatorio')?.value;
+            const entradasFiltradas = entradas.filter(e => e.data.startsWith(periodo));
+            const saidasFiltradas = saidas.filter(s => s.data.startsWith(periodo));
+            const totalEntradas = entradasFiltradas.reduce((sum, e) => sum + e.valor, 0);
+            const totalSaidas = saidasFiltradas.reduce((sum, s) => sum + s.valor, 0);
+            getElement('relatorio-conteudo').innerHTML = `
+                <p>Entradas: R$ ${totalEntradas.toFixed(2)}</p>
+                <p>Saídas: R$ ${totalSaidas.toFixed(2)}</p>
+                <p>Saldo: R$ ${(totalEntradas - totalSaidas).toFixed(2)}</p>
+            `;
+        });
+
+        getElement('btn-exportar')?.addEventListener('click', () => {
+            const csv = 'Data,Valor,Tipo,Categoria\n' +
+                entradas.map(e => `${e.data},${e.valor},Entrada,${e.fonte}`).join('\n') + '\n' +
+                saidas.map(s => `${s.data},${s.valor},Saída,${s.categoria}`).join('\n');
+            const blob = new Blob
