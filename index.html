@@ -258,3 +258,28 @@
         let categoriasSaidas = JSON.parse(localStorage.getItem('categoriasSaidas')) || ['Alimentação', 'Transporte', 'Lazer', 'Saúde', 'Educação', 'Casa', 'Tecnologia', 'Outros'];
 
         function log(message) { console.log('[Minhas Economias]', message); }
+
+        function getElement(id) {
+            const el = document.getElementById(id);
+            if (!el) {
+                log(`Erro: Elemento ${id} não encontrado`);
+                return null;
+            }
+            return el;
+        }
+
+        // Atualizar dropdown de categorias
+        function updateCategoriasDropdown() {
+            const selects = ['categoria-saida', 'categoria-saida-modal'];
+            selects.forEach(id => {
+                const select = getElement(id);
+                if (select) {
+                    select.innerHTML = '<option value="">Selecione</option>' + categoriasSaidas.map(cat => `<option>${cat}</option>`).join('');
+                }
+            });
+        }
+
+        // Navegação
+        getElement('btn-dashboard')?.addEventListener('click', () => {
+            log('Botão Dashboard clicado');
+            showSection
