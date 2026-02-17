@@ -6,111 +6,176 @@
     <title>Controle Financeiro Pessoal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .section { display: block; }
-        .section.hidden { display: none; }
-        ul li { padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .sidebar { background-color: #1e40af; color: white; width: 250px; position: fixed; height: 100%; overflow-y: auto; }
+        .main-content { margin-left: 250px; padding: 20px; }
+        .card { background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px; }
+        .btn-primary { background-color: #1e40af; color: white; padding: 10px 20px; border-radius: 5px; border: none; cursor: pointer; }
+        .btn-primary:hover { background-color: #1d4ed8; }
+        .hidden { display: none; }
         canvas { max-height: 300px; }
+        @media (max-width: 768px) { .sidebar { width: 100%; position: relative; height: auto; } .main-content { margin-left: 0; } }
     </style>
 </head>
-<body class="bg-gray-100 font-sans">
-    <div class="container mx-auto p-6 max-w-4xl">
-        <header class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-blue-600">Controle Financeiro Pessoal</h1>
-            <p class="text-gray-600 mt-2">Gerencie suas finanças de forma simples e visual.</p>
-        </header>
-
-        <nav class="flex justify-center space-x-4 mb-8">
-            <button id="btn-dashboard" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Dashboard</button>
-            <button id="btn-entradas" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Entradas</button>
-            <button id="btn-saidas" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Saídas</button>
-            <button id="btn-investimentos" class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600">Investimentos</button>
+<body>
+    <div class="sidebar">
+        <h2 class="text-xl font-bold mb-6 px-4"><i class="fas fa-chart-line"></i> Controle Financeiro</h2>
+        <nav>
+            <ul>
+                <li><button id="btn-dashboard" class="w-full text-left px-4 py-2 hover:bg-blue-700"><i class="fas fa-tachometer-alt"></i> Dashboard</button></li>
+                <li><button id="btn-entradas" class="w-full text-left px-4 py-2 hover:bg-blue-700"><i class="fas fa-plus-circle"></i> Entradas</button></li>
+                <li><button id="btn-saidas" class="w-full text-left px-4 py-2 hover:bg-blue-700"><i class="fas fa-minus-circle"></i> Saídas</button></li>
+                <li><button id="btn-investimentos" class="w-full text-left px-4 py-2 hover:bg-blue-700"><i class="fas fa-piggy-bank"></i> Investimentos</button></li>
+                <li><button id="btn-relatorios" class="w-full text-left px-4 py-2 hover:bg-blue-700"><i class="fas fa-file-alt"></i> Relatórios</button></li>
+            </ul>
         </nav>
+    </div>
 
+    <div class="main-content">
         <div id="dashboard" class="section">
-            <h2 class="text-2xl font-semibold mb-4">Dashboard</h2>
+            <h1 class="text-3xl font-bold mb-6">Dashboard</h1>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="card">
+                    <h3 class="text-lg font-semibold"><i class="fas fa-wallet"></i> Saldo Atual</h3>
+                    <p id="saldo-atual" class="text-2xl font-bold text-green-600">R$ 0,00</p>
+                </div>
+                <div class="card">
+                    <h3 class="text-lg font-semibold"><i class="fas fa-arrow-up"></i> Entradas (Mês)</h3>
+                    <p id="entradas-mes" class="text-2xl font-bold text-blue-600">R$ 0,00</p>
+                </div>
+                <div class="card">
+                    <h3 class="text-lg font-semibold"><i class="fas fa-arrow-down"></i> Saídas (Mês)</h3>
+                    <p id="saidas-mes" class="text-2xl font-bold text-red-600">R$ 0,00</p>
+                </div>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-white p-4 rounded shadow">
-                    <h3 class="text-lg font-medium">Resumo Mensal</h3>
-                    <p id="resumo">Carregando...</p>
+                <div class="card">
+                    <h3 class="text-lg font-semibold">Fluxo de Caixa (Mensal)</h3>
+                    <canvas id="chart-fluxo"></canvas>
                 </div>
-                <div class="bg-white p-4 rounded shadow">
-                    <h3 class="text-lg font-medium">Gráfico de Despesas por Categoria</h3>
-                    <canvas id="chart-despesas"></canvas>
+                <div class="card">
+                    <h3 class="text-lg font-semibold">Despesas por Categoria</h3>
+                    <canvas id="chart-categorias"></canvas>
                 </div>
-                <div class="bg-white p-4 rounded shadow">
-                    <h3 class="text-lg font-medium">Entradas vs. Saídas (Últimos 30 dias)</h3>
-                    <canvas id="chart-evolucao"></canvas>
-                </div>
-                <div class="bg-white p-4 rounded shadow">
-                    <h3 class="text-lg font-medium">Objetivos de Investimento</h3>
-                    <ul id="objetivos-lista"></ul>
-                </div>
+            </div>
+            <div class="card mt-6">
+                <h3 class="text-lg font-semibold">Objetivos de Investimento</h3>
+                <ul id="objetivos-lista"></ul>
             </div>
         </div>
 
         <div id="entradas" class="section hidden">
-            <h2 class="text-2xl font-semibold mb-4">Registrar Entrada</h2>
-            <form id="form-entrada" class="bg-white p-6 rounded shadow">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium">Valor (R$)</label>
-                    <input type="number" id="valor-entrada" class="w-full p-2 border rounded" required>
+            <h1 class="text-3xl font-bold mb-6">Entradas (Receitas)</h1>
+            <form id="form-entrada" class="card mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label>Valor (R$)</label>
+                        <input type="number" id="valor-entrada" class="w-full p-2 border rounded" required>
+                    </div>
+                    <div>
+                        <label>Fonte</label>
+                        <select id="fonte-entrada" class="w-full p-2 border rounded" required>
+                            <option value="">Selecione</option>
+                            <option>Salário</option>
+                            <option>Freelance</option>
+                            <option>Investimentos</option>
+                            <option>Outros</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Data</label>
+                        <input type="date" id="data-entrada" class="w-full p-2 border rounded" required>
+                    </div>
                 </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium">Fonte (ex.: Salário, Freelance)</label>
-                    <input type="text" id="fonte-entrada" class="w-full p-2 border rounded" required>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium">Data</label>
-                    <input type="date" id="data-entrada" class="w-full p-2 border rounded" required>
-                </div>
-                <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Salvar</button>
+                <button type="submit" class="btn-primary mt-4">Salvar Entrada</button>
             </form>
-            <h3 class="text-lg font-medium mt-6">Histórico de Entradas</h3>
-            <ul id="historico-entradas" class="mt-4"></ul>
+            <div class="card">
+                <h3 class="text-lg font-semibold">Histórico de Entradas</h3>
+                <div class="mb-4">
+                    <label>Filtro por Mês/Ano:</label>
+                    <input type="month" id="filtro-entradas" class="p-2 border rounded">
+                    <button id="btn-filtrar-entradas" class="btn-primary ml-2">Filtrar</button>
+                </div>
+                <ul id="historico-entradas"></ul>
+            </div>
         </div>
 
         <div id="saidas" class="section hidden">
-            <h2 class="text-2xl font-semibold mb-4">Registrar Saída</h2>
-            <form id="form-saida" class="bg-white p-6 rounded shadow">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium">Valor (R$)</label>
-                    <input type="number" id="valor-saida" class="w-full p-2 border rounded" required>
+            <h1 class="text-3xl font-bold mb-6">Saídas (Despesas)</h1>
+            <form id="form-saida" class="card mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label>Valor (R$)</label>
+                        <input type="number" id="valor-saida" class="w-full p-2 border rounded" required>
+                    </div>
+                    <div>
+                        <label>Categoria</label>
+                        <select id="categoria-saida" class="w-full p-2 border rounded" required>
+                            <option value="">Selecione</option>
+                            <option>Alimentação</option>
+                            <option>Transporte</option>
+                            <option>Lazer</option>
+                            <option>Saúde</option>
+                            <option>Outros</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Data</label>
+                        <input type="date" id="data-saida" class="w-full p-2 border rounded" required>
+                    </div>
                 </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium">Categoria (ex.: Alimentação, Transporte)</label>
-                    <input type="text" id="categoria-saida" class="w-full p-2 border rounded" required>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium">Data</label>
-                    <input type="date" id="data-saida" class="w-full p-2 border rounded" required>
-                </div>
-                <button type="submit" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Salvar</button>
+                <button type="submit" class="btn-primary mt-4">Salvar Saída</button>
             </form>
-            <h3 class="text-lg font-medium mt-6">Histórico de Saídas</h3>
-            <ul id="historico-saidas" class="mt-4"></ul>
+            <div class="card">
+                <h3 class="text-lg font-semibold">Histórico de Saídas</h3>
+                <div class="mb-4">
+                    <label>Filtro por Mês/Ano:</label>
+                    <input type="month" id="filtro-saidas" class="p-2 border rounded">
+                    <button id="btn-filtrar-saidas" class="btn-primary ml-2">Filtrar</button>
+                </div>
+                <ul id="historico-saidas"></ul>
+            </div>
         </div>
 
         <div id="investimentos" class="section hidden">
-            <h2 class="text-2xl font-semibold mb-4">Objetivos de Investimento</h2>
-            <form id="form-investimento" class="bg-white p-6 rounded shadow">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium">Objetivo (ex.: Casa própria)</label>
-                    <input type="text" id="objetivo-investimento" class="w-full p-2 border rounded" required>
+            <h1 class="text-3xl font-bold mb-6">Investimentos</h1>
+            <form id="form-investimento" class="card mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label>Objetivo</label>
+                        <input type="text" id="objetivo-investimento" class="w-full p-2 border rounded" required>
+                    </div>
+                    <div>
+                        <label>Valor Alvo (R$)</label>
+                        <input type="number" id="valor-alvo" class="w-full p-2 border rounded" required>
+                    </div>
+                    <div>
+                        <label>Valor Atual (R$)</label>
+                        <input type="number" id="valor-atual" class="w-full p-2 border rounded" required>
+                    </div>
                 </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium">Valor Alvo (R$)</label>
-                    <input type="number" id="valor-alvo" class="w-full p-2 border rounded" required>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium">Valor Atual (R$)</label>
-                    <input type="number" id="valor-atual" class="w-full p-2 border rounded" required>
-                </div>
-                <button type="submit" class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600">Salvar</button>
+                <button type="submit" class="btn-primary mt-4">Salvar Objetivo</button>
             </form>
-            <h3 class="text-lg font-medium mt-6">Objetivos Salvos</h3>
-            <ul id="objetivos-salvos" class="mt-4"></ul>
+            <div class="card">
+                <h3 class="text-lg font-semibold">Objetivos Salvos</h3>
+                <ul id="objetivos-salvos"></ul>
+            </div>
+        </div>
+
+        <div id="relatorios" class="section hidden">
+            <h1 class="text-3xl font-bold mb-6">Relatórios</h1>
+            <div class="card">
+                <h3 class="text-lg font-semibold">Resumo por Período</h3>
+                <div class="mb-4">
+                    <label>Selecione Mês/Ano:</label>
+                    <input type="month" id="periodo-relatorio" class="p-2 border rounded">
+                    <button id="btn-gerar-relatorio" class="btn-primary ml-2">Gerar Relatório</button>
+                </div>
+                <div id="relatorio-conteudo"></div>
+                <button id="btn-exportar" class="btn-primary mt-4">Exportar para CSV</button>
+            </div>
         </div>
     </div>
 
@@ -120,19 +185,16 @@
         let saidas = JSON.parse(localStorage.getItem('saidas')) || [];
         let investimentos = JSON.parse(localStorage.getItem('investimentos')) || [];
 
-        // Função de log para depuração
-        function log(message) {
-            console.log('[Controle Financeiro]', message);
-        }
+        function log(message) { console.log('[Controle Financeiro]', message); }
 
         // Navegação
         document.getElementById('btn-dashboard').addEventListener('click', () => showSection('dashboard'));
         document.getElementById('btn-entradas').addEventListener('click', () => showSection('entradas'));
         document.getElementById('btn-saidas').addEventListener('click', () => showSection('saidas'));
         document.getElementById('btn-investimentos').addEventListener('click', () => showSection('investimentos'));
+        document.getElementById('btn-relatorios').addEventListener('click', () => showSection('relatorios'));
 
         function showSection(sectionId) {
-            log(`Mostrando seção: ${sectionId}`);
             document.querySelectorAll('.section').forEach(sec => sec.classList.add('hidden'));
             document.getElementById(sectionId).classList.remove('hidden');
             if (sectionId === 'dashboard') updateDashboard();
@@ -141,144 +203,49 @@
         // Formulários
         document.getElementById('form-entrada').addEventListener('submit', (e) => {
             e.preventDefault();
-            log('Tentando salvar entrada');
-            try {
-                const entrada = {
-                    valor: parseFloat(document.getElementById('valor-entrada').value),
-                    fonte: document.getElementById('fonte-entrada').value,
-                    data: document.getElementById('data-entrada').value
-                };
-                if (!entrada.valor || !entrada.fonte || !entrada.data) throw new Error('Campos obrigatórios faltando');
-                entradas.push(entrada);
-                localStorage.setItem('entradas', JSON.stringify(entradas));
-                updateHistorico('historico-entradas', entradas);
-                log('Entrada salva com sucesso');
-                e.target.reset();
-            } catch (error) {
-                log(`Erro ao salvar entrada: ${error.message}`);
-                alert(`Erro: ${error.message}`);
-            }
+            const entrada = {
+                valor: parseFloat(document.getElementById('valor-entrada').value),
+                fonte: document.getElementById('fonte-entrada').value,
+                data: document.getElementById('data-entrada').value
+            };
+            entradas.push(entrada);
+            localStorage.setItem('entradas', JSON.stringify(entradas));
+            updateHistorico('historico-entradas', entradas);
+            e.target.reset();
+            alert('Entrada salva!');
         });
 
         document.getElementById('form-saida').addEventListener('submit', (e) => {
             e.preventDefault();
-            log('Tentando salvar saída');
-            try {
-                const saida = {
-                    valor: parseFloat(document.getElementById('valor-saida').value),
-                    categoria: document.getElementById('categoria-saida').value,
-                    data: document.getElementById('data-saida').value
-                };
-                if (!saida.valor || !saida.categoria || !saida.data) throw new Error('Campos obrigatórios faltando');
-                saidas.push(saida);
-                localStorage.setItem('saidas', JSON.stringify(saidas));
-                updateHistorico('historico-saidas', saidas);
-                log('Saída salva com sucesso');
-                e.target.reset();
-            } catch (error) {
-                log(`Erro ao salvar saída: ${error.message}`);
-                alert(`Erro: ${error.message}`);
-            }
+            const saida = {
+                valor: parseFloat(document.getElementById('valor-saida').value),
+                categoria: document.getElementById('categoria-saida').value,
+                data: document.getElementById('data-saida').value
+            };
+            saidas.push(saida);
+            localStorage.setItem('saidas', JSON.stringify(saidas));
+            updateHistorico('historico-saidas', saidas);
+            e.target.reset();
+            alert('Saída salva!');
         });
 
         document.getElementById('form-investimento').addEventListener('submit', (e) => {
             e.preventDefault();
-            log('Tentando salvar investimento');
-            try {
-                const investimento = {
-                    objetivo: document.getElementById('objetivo-investimento').value,
-                    alvo: parseFloat(document.getElementById('valor-alvo').value),
-                    atual: parseFloat(document.getElementById('valor-atual').value)
-                };
-                if (!investimento.objetivo || !investimento.alvo || isNaN(investimento.atual)) throw new Error('Campos obrigatórios faltando');
-                investimentos.push(investimento);
-                localStorage.setItem('investimentos', JSON.stringify(investimentos));
-                updateObjetivos();
-                log('Investimento salvo com sucesso');
-                e.target.reset();
-            } catch (error) {
-                log(`Erro ao salvar investimento: ${error.message}`);
-                alert(`Erro: ${error.message}`);
-            }
+            const investimento = {
+                objetivo: document.getElementById('objetivo-investimento').value,
+                alvo: parseFloat(document.getElementById('valor-alvo').value),
+                atual: parseFloat(document.getElementById('valor-atual').value)
+            };
+            investimentos.push(investimento);
+            localStorage.setItem('investimentos', JSON.stringify(investimentos));
+            updateObjetivos();
+            e.target.reset();
+            alert('Objetivo salvo!');
         });
 
-        // Atualizar histórico
-        function updateHistorico(id, lista) {
-            const ul = document.getElementById(id);
-            if (!ul) return log(`Elemento ${id} não encontrado`);
-            ul.innerHTML = lista.map(item => `<li>${item.data}: R$ ${item.valor} - ${item.fonte || item.categoria}</li>`).join('');
-            log(`Histórico ${id} atualizado`);
-        }
-
-        // Atualizar objetivos
-        function updateObjetivos() {
-            const ul = document.getElementById('objetivos-salvos');
-            if (!ul) return log('Elemento objetivos-salvos não encontrado');
-            ul.innerHTML = investimentos.map(inv => `<li>${inv.objetivo}: R$ ${inv.atual} / R$ ${inv.alvo} (${((inv.atual / inv.alvo) * 100).toFixed(1)}%)</li>`).join('');
-            const listaDashboard = document.getElementById('objetivos-lista');
-            if (listaDashboard) listaDashboard.innerHTML = ul.innerHTML;
-            log('Objetivos atualizados');
-        }
-
-        // Dashboard
-        function updateDashboard() {
-            log('Atualizando dashboard');
-            const totalEntradas = entradas.reduce((sum, e) => sum + e.valor, 0);
-            const totalSaidas = saidas.reduce((sum, s) => sum + s.valor, 0);
-            document.getElementById('resumo').innerHTML = `Entradas: R$ ${totalEntradas.toFixed(2)} | Saídas: R$ ${totalSaidas.toFixed(2)} | Saldo: R$ ${(totalEntradas - totalSaidas).toFixed(2)}`;
-
-            // Gráfico de despesas por categoria
-            const categorias = {};
-            saidas.forEach(s => categorias[s.categoria] = (categorias[s.categoria] || 0) + s.valor);
-            const ctxDespesas = document.getElementById('chart-despesas');
-            if (ctxDespesas) {
-                new Chart(ctxDespesas, {
-                    type: 'pie',
-                    data: {
-                        labels: Object.keys(categorias),
-                        datasets: [{ data: Object.values(categorias), backgroundColor: ['#ff6384', '#36a2eb', '#cc65fe'] }]
-                    }
-                });
-            }
-
-            // Gráfico de evolução
-            const meses = {};
-            entradas.forEach(e => {
-                const mes = e.data.slice(0, 7);
-                meses[mes] = meses[mes] || { entradas: 0, saidas: 0 };
-                meses[mes].entradas += e.valor;
-            });
-            saidas.forEach(s => {
-                const mes = s.data.slice(0, 7);
-                meses[mes] = meses[mes] || { entradas: 0, saidas: 0 };
-                meses[mes].saidas += s.valor;
-            });
-            const labels = Object.keys(meses).sort();
-            const entradasData = labels.map(m => meses[m].entradas);
-            const saidasData = labels.map(m => meses[m].saidas);
-            const ctxEvolucao = document.getElementById('chart-evolucao');
-            if (ctxEvolucao) {
-                new Chart(ctxEvolucao, {
-                    type: 'line',
-                    data: {
-                        labels,
-                        datasets: [
-                            { label: 'Entradas', data: entradasData, borderColor: '#4caf50' },
-                            { label: 'Saídas', data: saidasData, borderColor: '#f44336' }
-                        ]
-                    }
-                });
-            }
-
-            updateObjetivos();
-        }
-
-        // Inicializar
-        log('Inicializando app');
-        showSection('dashboard');
-        updateHistorico('historico-entradas', entradas);
-        updateHistorico('historico-saidas', saidas);
-        updateObjetivos();
-    </script>
-</body>
-</html>
+        // Filtros
+        document.getElementById('btn-filtrar-entradas').addEventListener('click', () => {
+            const filtro = document.getElementById('filtro-entradas').value;
+            const filtradas = entradas.filter(e => e.data.startsWith(filtro));
+            updateHistorico('historico-entradas', filtradas);
+        });
